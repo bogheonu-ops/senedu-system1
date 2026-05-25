@@ -7,196 +7,132 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <style>
         :root { --main: #3498db; --bg: #f4f7f6; }
-
         *, *::before, *::after { box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR', sans-serif;
-            background: var(--bg);
-            margin: 0; padding: 16px;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
+            background: var(--bg); margin: 0; padding: 16px;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-
         .app-container {
-            width: 100%; max-width: 480px;
-            background: white; padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%; max-width: 480px; background: white; padding: 20px;
+            border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         @media (max-width: 500px) {
             body { padding: 0; }
             .app-container { border-radius: 0; min-height: 100vh; box-shadow: none; }
         }
-
         .hidden { display: none !important; }
-
         input, textarea {
             width: 100%; padding: 13px; margin: 6px 0;
-            border: 1px solid #ddd; border-radius: 10px;
-            font-size: 16px;
+            border: 1px solid #ddd; border-radius: 10px; font-size: 16px;
             -webkit-appearance: none; appearance: none; outline: none;
         }
         input:focus, textarea:focus { border-color: var(--main); }
-
         .file-label {
             display: block; width: 100%; padding: 12px; margin: 6px 0;
             background: #f0f7ff; border: 1.5px dashed var(--main);
             border-radius: 10px; color: var(--main);
-            font-size: 15px; font-weight: 500; text-align: center;
-            cursor: pointer;
+            font-size: 15px; font-weight: 500; text-align: center; cursor: pointer;
         }
         .file-label:active { opacity: 0.7; }
         #post-file { display: none; }
         #file-name-display { font-size: 13px; color: #888; text-align: center; margin: 2px 0 4px; min-height: 18px; }
-        #upload-status    { font-size: 13px; color: var(--main); text-align: center; margin: 2px 0; min-height: 18px; }
-
+        #upload-status { font-size: 13px; color: var(--main); text-align: center; margin: 2px 0; min-height: 18px; }
         .btn {
             width: 100%; padding: 14px; border-radius: 10px;
-            font-weight: bold; font-size: 16px;
-            cursor: pointer; text-align: center;
+            font-weight: bold; font-size: 16px; cursor: pointer; text-align: center;
             transition: opacity 0.15s; margin-top: 8px;
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
         .btn-blue  { background: var(--main); color: white; }
         .btn-green { background: #2ecc71; color: white; }
         .btn:active { opacity: 0.7; }
-
         #debug-console {
-            width: 100%; max-width: 480px;
-            background: #2c3e50; color: #2ecc71;
+            width: 100%; max-width: 480px; background: #2c3e50; color: #2ecc71;
             padding: 12px; border-radius: 10px; margin-top: 16px;
             font-family: monospace; font-size: 12px;
             overflow-y: auto; max-height: 120px; border: 2px solid #34495e;
         }
-
         .post-card {
-            border: 1px solid #eee; padding: 14px;
-            margin-top: 14px; border-radius: 12px;
-            position: relative;
+            border: 1px solid #eee; padding: 14px; margin-top: 14px;
+            border-radius: 12px; position: relative;
         }
-        .post-author {
-            color: var(--main); cursor: pointer;
-            text-decoration: underline; font-size: 15px;
-        }
+        .post-author { color: var(--main); cursor: pointer; text-decoration: underline; font-size: 15px; }
         .post-author:hover { opacity: 0.7; }
         .post-card p { margin: 8px 0 0; font-size: 14px; color: #333; white-space: pre-wrap; word-break: break-all; }
         .post-img {
             display: block; width: 100%; max-height: 320px;
-            object-fit: cover; border-radius: 10px; margin-top: 10px;
-            background: #f0f0f0;
+            object-fit: cover; border-radius: 10px; margin-top: 10px; background: #f0f0f0;
         }
-
-        /* ── DM 섹션 ── */
         .dm-section { margin-top: 0; }
-
         .dm-contacts {
-            display: flex; gap: 12px;
-            overflow-x: auto; padding: 8px 0 12px;
-            scrollbar-width: none;
+            display: flex; gap: 12px; overflow-x: auto; padding: 8px 0 12px; scrollbar-width: none;
         }
         .dm-contacts::-webkit-scrollbar { display: none; }
-
         .dm-contact {
             display: flex; flex-direction: column; align-items: center;
-            gap: 4px; cursor: pointer; flex-shrink: 0;
-            min-width: 56px;
+            gap: 4px; cursor: pointer; flex-shrink: 0; min-width: 56px;
         }
         .dm-contact:active { opacity: 0.7; }
-
         .dm-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: #e3f2fd;
+            width: 48px; height: 48px; border-radius: 50%; background: #e3f2fd;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px; font-weight: 600; color: var(--main);
-            border: 2px solid transparent;
-            transition: border-color 0.15s;
-            position: relative;
+            border: 2px solid transparent; transition: border-color 0.15s; position: relative;
         }
         .dm-contact.active .dm-avatar { border-color: var(--main); }
-
         .dm-badge {
-            position: absolute; top: -2px; right: -2px;
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #e74c3c; color: white;
+            position: absolute; top: -2px; right: -2px; width: 16px; height: 16px;
+            border-radius: 50%; background: #e74c3c; color: white;
             font-size: 10px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid white;
+            display: flex; align-items: center; justify-content: center; border: 2px solid white;
         }
-
         .dm-name {
-            font-size: 11px; color: #555;
-            max-width: 56px; overflow: hidden;
-            text-overflow: ellipsis; white-space: nowrap;
-            text-align: center;
+            font-size: 11px; color: #555; max-width: 56px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
         }
         .dm-contact.active .dm-name { color: var(--main); font-weight: 600; }
-
-        .dm-empty {
-            font-size: 13px; color: #aaa;
-            padding: 8px 0 12px; text-align: center; width: 100%;
-        }
-
+        .dm-empty { font-size: 13px; color: #aaa; padding: 8px 0 12px; text-align: center; width: 100%; }
         .chat-box {
-            height: 250px; overflow-y: auto;
-            border: 1px solid #eee; padding: 10px;
-            background: #f9f9f9; border-radius: 10px;
-            display: flex; flex-direction: column; gap: 8px;
+            height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px;
+            background: #f9f9f9; border-radius: 10px; display: flex; flex-direction: column; gap: 8px;
         }
-
-        .msg-wrapper {
-            display: flex; align-items: flex-end; gap: 4px;
-            margin-bottom: 2px;
-        }
+        .msg-wrapper { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 2px; }
         .msg-wrapper.me  { justify-content: flex-end; }
         .msg-wrapper.you { justify-content: flex-start; }
-
         .msg {
-            max-width: 78%; padding: 9px 13px;
-            border-radius: 16px; font-size: 14px;
-            line-height: 1.4; word-break: break-all;
+            max-width: 78%; padding: 9px 13px; border-radius: 16px;
+            font-size: 14px; line-height: 1.4; word-break: break-all;
         }
         .msg.me  { background: #ffe812; border-bottom-right-radius: 4px; }
         .msg.you { background: white; border: 1px solid #ddd; border-bottom-left-radius: 4px; }
-
         .chat-input-row { display: flex; gap: 6px; margin-top: 8px; align-items: stretch; }
         .chat-input-row input { margin: 0; }
         #chat-msg { flex: 1; }
         #btn-chat {
-            flex: 0 0 56px; padding: 0; margin: 0;
-            font-size: 14px;
+            flex: 0 0 56px; padding: 0; margin: 0; font-size: 14px;
             display: flex; align-items: center; justify-content: center;
         }
-
         #chat-target-label {
-            font-size: 13px; color: #555;
-            padding: 6px 10px; background: #f0f7ff;
-            border-radius: 8px; margin-bottom: 8px;
-            text-align: center; min-height: 32px;
+            font-size: 13px; color: #555; padding: 6px 10px; background: #f0f7ff;
+            border-radius: 8px; margin-bottom: 8px; text-align: center; min-height: 32px;
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-
     <div id="view-login">
         <h2 style="text-align:center; color:var(--main); margin-bottom:20px;">Senedu 센터</h2>
-        <input type="email"    id="login-email" placeholder="학교 이메일 (@senedu.kr)"
-               autocomplete="email" inputmode="email">
-        <input type="password" id="login-pw"    placeholder="비밀번호 (6자 이상)"
-               autocomplete="current-password">
+        <input type="email" id="login-email" placeholder="학교 이메일 (@senedu.kr)" autocomplete="email" inputmode="email">
+        <input type="password" id="login-pw" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">
         <div class="btn btn-blue" id="btn-login">입장하기</div>
     </div>
 
     <div id="view-main" class="hidden">
-
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <strong id="my-id" style="font-size:15px;">접속 중...</strong>
-            <div class="btn" id="btn-logout"
-                 style="width:auto; padding:7px 14px; font-size:13px; background:#eee; margin:0;">
-                로그아웃
-            </div>
+            <div class="btn" id="btn-logout" style="width:auto; padding:7px 14px; font-size:13px; background:#eee; margin:0;">로그아웃</div>
         </div>
 
         <div style="background:#e3f2fd; padding:14px; border-radius:12px;">
@@ -207,38 +143,30 @@
             <div id="upload-status"></div>
             <div class="btn btn-blue" id="btn-upload">제보 등록</div>
         </div>
-
         <div id="post-list"></div>
 
         <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
 
         <div class="dm-section">
             <h3 style="margin:0 0 10px; font-size:16px; color:#333;">💬 실시간 DM 톡</h3>
-
             <div style="display:flex; gap:6px; margin-bottom:10px;">
-                <input type="email" id="chat-add-input" placeholder="상대방 학교 이메일 입력" style="margin:0; flex:1; font-size: 14px; padding: 10px;">
-                <div class="btn btn-blue" id="btn-add-contact" style="margin:0; flex:0 0 60px; padding: 10px; font-size: 13px;">추가</div>
+                <input type="email" id="chat-add-input" placeholder="상대방 학교 이메일 입력" style="margin:0; flex:1; font-size:14px; padding:10px;">
+                <div class="btn btn-blue" id="btn-add-contact" style="margin:0; flex:0 0 60px; padding:10px; font-size:13px;">추가</div>
             </div>
-
             <div id="dm-contacts" class="dm-contacts"></div>
-
             <div id="chat-target-label">대화 상대를 선택하세요</div>
-
             <div id="chat-display" class="chat-box"></div>
-
             <div class="chat-input-row">
                 <input type="text" id="chat-msg" placeholder="메시지를 입력하세요" autocomplete="off">
                 <div class="btn btn-green" id="btn-chat">전송</div>
             </div>
         </div>
-
     </div>
 </div>
 
 <div id="debug-console">시스템 로그 대기 중...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -251,46 +179,54 @@ document.addEventListener('DOMContentLoaded', function () {
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const debugEl = document.getElementById('debug-console');
-    const logger  = (msg) => {
+    const logger = function(msg) {
         if (!debugEl) return;
         debugEl.innerText += '\n> ' + msg;
-        debugEl.scrollTop  = debugEl.scrollHeight;
+        debugEl.scrollTop = debugEl.scrollHeight;
         console.log(msg);
     };
 
-    const elLoginView      = document.getElementById('view-login');
-    const elMainView       = document.getElementById('view-main');
-    const elMyId           = document.getElementById('my-id');
-    const elBtnLogin       = document.getElementById('btn-login');
-    const elBtnLogout      = document.getElementById('btn-logout');
-    const elBtnUpload      = document.getElementById('btn-upload');
-    const elBtnChat        = document.getElementById('btn-chat');
-    const elLoginEmail     = document.getElementById('login-email');
-    const elLoginPw        = document.getElementById('login-pw');
-    const elPostText       = document.getElementById('post-text');
-    const elPostFile       = document.getElementById('post-file');
-    const elFileDisplay    = document.getElementById('file-name-display');
-    const elUploadStatus   = document.getElementById('upload-status');
-    const elPostList       = document.getElementById('post-list');
-    const elChatDisplay    = document.getElementById('chat-display');
-    const elChatMsg        = document.getElementById('chat-msg');
-    const elDmContacts     = document.getElementById('dm-contacts');
-    const elChatTargetLabel= document.getElementById('chat-target-label');
-    const elChatAddInput   = document.getElementById('chat-add-input');
-    const elBtnAddContact  = document.getElementById('btn-add-contact');
+    // 요소 참조
+    const elLoginView       = document.getElementById('view-login');
+    const elMainView        = document.getElementById('view-main');
+    const elMyId            = document.getElementById('my-id');
+    const elBtnLogin        = document.getElementById('btn-login');
+    const elBtnLogout       = document.getElementById('btn-logout');
+    const elBtnUpload       = document.getElementById('btn-upload');
+    const elBtnChat         = document.getElementById('btn-chat');
+    const elLoginEmail      = document.getElementById('login-email');
+    const elLoginPw         = document.getElementById('login-pw');
+    const elPostText        = document.getElementById('post-text');
+    const elPostFile        = document.getElementById('post-file');
+    const elFileDisplay     = document.getElementById('file-name-display');
+    const elUploadStatus    = document.getElementById('upload-status');
+    const elPostList        = document.getElementById('post-list');
+    const elChatDisplay     = document.getElementById('chat-display');
+    const elChatMsg         = document.getElementById('chat-msg');
+    const elDmContacts      = document.getElementById('dm-contacts');
+    const elChatTargetLabel = document.getElementById('chat-target-label');
+    const elChatAddInput    = document.getElementById('chat-add-input');
+    const elBtnAddContact   = document.getElementById('btn-add-contact');
 
-    let currentMyEmail  = "";
-    let currentChatTo   = "";
-    let contactList     = [];
-    let allMessages     = [];
-    let postsChannel    = null;
-    let chatsChannel    = null;
+    // 전역 상태
+    let currentMyEmail = "";
+    let currentChatTo  = "";
+    let contactList    = [];
+    let allMessages    = [];
 
-    elPostFile.addEventListener('change', function () {
-        const file = this.files && this.files[0];
+    // ── 채널: 변수에 저장해서 중복 구독 방지 ──────────────────────
+    // subscribe() 호출 후에는 절대 .on()을 다시 추가할 수 없으므로
+    // 채널 자체를 변수로 관리하고 로그아웃 시 완전히 제거합니다.
+    let postsChannel = null;
+    let chatsChannel = null;
+
+    // 파일 선택 표시
+    elPostFile.addEventListener('change', function() {
+        var file = this.files && this.files[0];
         elFileDisplay.textContent = file ? file.name : '선택된 파일 없음';
     });
 
+    // 화면 전환
     function showMain(email) {
         elLoginView.classList.add('hidden');
         elMainView.classList.remove('hidden');
@@ -301,41 +237,55 @@ document.addEventListener('DOMContentLoaded', function () {
         elLoginView.classList.remove('hidden');
     }
 
-    elBtnLogin.onclick = async () => {
-        const email = elLoginEmail.value.trim();
-        const pw    = elLoginPw.value;
+    // 로그인
+    elBtnLogin.onclick = async function() {
+        var email = elLoginEmail.value.trim();
+        var pw    = elLoginPw.value;
         if (!email.includes(ALLOWED_DOMAIN) && !ADMINS.includes(email)) {
             return alert('학교 이메일(' + ALLOWED_DOMAIN + ') 또는 관리자 계정을 사용하세요.');
         }
         if (pw.length < 6) return alert('비밀번호는 6자 이상입니다.');
         logger('로그인 시도 중...');
-        const { error: signInErr } = await sb.auth.signInWithPassword({ email, password: pw });
-        if (signInErr) {
-            if (signInErr.message.includes('Invalid login') || signInErr.message.includes('User not found')) {
-                const { error: signUpErr } = await sb.auth.signUp({ email, password: pw });
-                if (signUpErr) return alert('가입 오류: ' + signUpErr.message);
-                const { error: retryErr } = await sb.auth.signInWithPassword({ email, password: pw });
-                if (retryErr) return alert('가입 완료. 다시 [입장하기]를 눌러주세요.');
+        var r = await sb.auth.signInWithPassword({ email: email, password: pw });
+        if (r.error) {
+            if (r.error.message.includes('Invalid login') || r.error.message.includes('User not found')) {
+                var r2 = await sb.auth.signUp({ email: email, password: pw });
+                if (r2.error) return alert('가입 오류: ' + r2.error.message);
+                var r3 = await sb.auth.signInWithPassword({ email: email, password: pw });
+                if (r3.error) return alert('가입 완료. 다시 [입장하기]를 눌러주세요.');
             } else {
-                return alert('로그인 오류: ' + signInErr.message);
+                return alert('로그인 오류: ' + r.error.message);
             }
         }
     };
 
-    elBtnLogout.onclick = async () => {
-        try { await sb.auth.signOut(); } catch (e) {}
-        try { Object.keys(localStorage).forEach(k => { if (k.startsWith('sb-')) localStorage.removeItem(k); }); } catch (e) {}
+    // 로그아웃
+    elBtnLogout.onclick = async function() {
+        try { await sb.auth.signOut(); } catch(e) {}
+        try { Object.keys(localStorage).forEach(function(k) { if (k.startsWith('sb-')) localStorage.removeItem(k); }); } catch(e) {}
         currentMyEmail = ""; currentChatTo = ""; contactList = []; allMessages = [];
         showLogin();
     };
 
-    sb.auth.onAuthStateChange((event, session) => {
-        if (session && session.user) {
+    // ── 인증 상태 감시 ───────────────────────────────────────────
+    // SIGNED_IN 이벤트만 처리해서 중복 호출 방지
+    sb.auth.onAuthStateChange(async function(event, session) {
+        if (event === 'SIGNED_IN' && session && session.user) {
+            // 이미 초기화된 경우 중복 실행 방지
+            if (currentMyEmail === session.user.email) return;
+
             currentMyEmail = session.user.email;
+            logger('로그인 확인: ' + currentMyEmail);
             showMain(currentMyEmail);
-            startRealtimePosts(ADMINS.includes(currentMyEmail));
-            startRealtimeChats(currentMyEmail);
-        } else {
+
+            // 기존 채널이 있으면 완전히 제거 후 재생성
+            if (postsChannel) { await sb.removeChannel(postsChannel); postsChannel = null; }
+            if (chatsChannel) { await sb.removeChannel(chatsChannel); chatsChannel = null; }
+
+            initPosts(ADMINS.includes(currentMyEmail));
+            initChats(currentMyEmail);
+
+        } else if (event === 'SIGNED_OUT') {
             currentMyEmail = "";
             showLogin();
             if (postsChannel) { sb.removeChannel(postsChannel); postsChannel = null; }
@@ -343,101 +293,75 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    async function fetchAndRenderPosts(isAdmin) {
-        const { data } = await sb.from('posts').select('*').order('created_at', { ascending: false });
-        renderPosts(data || [], isAdmin);
+    // ── 게시물 ──────────────────────────────────────────────────
+    async function fetchPosts(isAdmin) {
+        var r = await sb.from('posts').select('*').order('created_at', { ascending: false });
+        renderPosts(r.data || [], isAdmin);
     }
-    async function startRealtimePosts(isAdmin) {
-        if (postsChannel) return;
-        await fetchAndRenderPosts(isAdmin);
-        postsChannel = sb.channel('realtime-posts')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => fetchAndRenderPosts(isAdmin))
+
+    function initPosts(isAdmin) {
+        fetchPosts(isAdmin);
+        // 새 채널 생성 후 subscribe → 이후 .on() 추가 불가
+        postsChannel = sb.channel('posts-ch-' + Date.now())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' },
+                function() { fetchPosts(isAdmin); })
             .subscribe();
     }
+
     function renderPosts(data, isAdmin) {
         if (!data || data.length === 0) {
             elPostList.innerHTML = '<p style="color:#aaa;text-align:center;margin-top:20px;">등록된 게시물이 없습니다.</p>';
             return;
         }
-        elPostList.innerHTML = data.map(p => {
-            const rawAuthor  = p.author || '알 수 없음';
-            const authorName = rawAuthor.split('@')[0];
-            const time       = p.created_at ? new Date(p.created_at).toLocaleString('ko-KR') : '';
-            const imgHtml    = p.img ? '<img src="' + p.img + '" class="post-img" loading="lazy">' : '';
-            const isMyPost   = rawAuthor === currentMyEmail;
-            const deleteBtn  = (isAdmin || isMyPost)
+        elPostList.innerHTML = data.map(function(p) {
+            var rawAuthor  = p.author || '알 수 없음';
+            var authorName = rawAuthor.split('@')[0];
+            var time       = p.created_at ? new Date(p.created_at).toLocaleString('ko-KR') : '';
+            var imgHtml    = p.img ? '<img src="' + p.img + '" class="post-img" loading="lazy">' : '';
+            var isMyPost   = rawAuthor === currentMyEmail;
+            var deleteBtn  = (isAdmin || isMyPost)
                 ? '<button onclick="window.deletePost(\'' + p.id + '\')" style="color:red;background:none;border:none;cursor:pointer;position:absolute;top:14px;right:14px;font-size:13px;">[삭제]</button>'
                 : '';
             return '<div class="post-card">'
-                 + '<b class="post-author" onclick="window.selectChatTarget(\'' + rawAuthor + '\')" title="클릭하여 DM 보내기">' + authorName + '</b>'
-                 + '<span style="font-size:12px;color:#aaa;margin-left:8px;">' + time + '</span>'
-                 + '<p>' + (p.content || '') + '</p>' + imgHtml + deleteBtn + '</div>';
+                + '<b class="post-author" onclick="window.selectChatTarget(\'' + rawAuthor + '\')">' + authorName + '</b>'
+                + '<span style="font-size:12px;color:#aaa;margin-left:8px;">' + time + '</span>'
+                + '<p>' + (p.content || '') + '</p>' + imgHtml + deleteBtn + '</div>';
         }).join('');
     }
 
-    // ── 사진 업로드 핵심 함수 ────────────────────────────────────
-    // 파일을 base64로 변환하는 헬퍼
-    function fileToBase64(file) {
-        return new Promise(function(resolve, reject) {
-            var reader = new FileReader();
-            reader.onload  = function() { resolve(reader.result); };
-            reader.onerror = function() { reject(new Error('파일 읽기 실패')); };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // 이미지 업로드: Supabase Storage → imgbb 순으로 시도
+    // ── 이미지 업로드 (Supabase Storage 전용) ────────────────────
+    // imgbb를 완전히 제거하고 Supabase Storage만 사용합니다.
+    // Storage 버킷 'post-images'가 Public으로 설정되어 있어야 합니다.
     async function uploadImage(file) {
-        // 방법 1: Supabase Storage (가장 안정적)
         try {
-            var fileName = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            var uploadResult = await sb.storage
+            // 파일명: 타임스탬프 + 영문 변환 (한글 파일명 오류 방지)
+            var ext      = file.name.split('.').pop();
+            var fileName = Date.now() + '.' + ext;
+
+            var uploadRes = await sb.storage
                 .from('post-images')
                 .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
-            if (!uploadResult.error) {
-                var urlResult = sb.storage.from('post-images').getPublicUrl(fileName);
-                if (urlResult.data && urlResult.data.publicUrl) {
-                    logger('이미지 업로드 성공 (Supabase Storage)');
-                    return urlResult.data.publicUrl;
-                }
+            if (uploadRes.error) {
+                logger('Storage 오류: ' + uploadRes.error.message);
+                return '';
             }
-            logger('Supabase Storage 실패 → imgbb 시도');
-        } catch (e) {
-            logger('Supabase Storage 오류 → imgbb 시도');
-        }
 
-        // 방법 2: imgbb (base64 방식)
-        try {
-            var base64 = await fileToBase64(file);
-            var base64Data = base64.split(',')[1]; // "data:image/...;base64," 제거
-
-            var fd = new FormData();
-            fd.append('image', base64Data);
-
-            var res = await fetch(
-                'https://api.imgbb.com/1/upload?key=692797686561f516a5196696e382898c',
-                { method: 'POST', body: fd }
-            );
-            var d = await res.json();
-            if (d && d.success) {
-                logger('이미지 업로드 성공 (imgbb)');
-                return d.data.url;
+            var urlRes = sb.storage.from('post-images').getPublicUrl(fileName);
+            if (urlRes.data && urlRes.data.publicUrl) {
+                logger('이미지 업로드 성공: ' + urlRes.data.publicUrl);
+                return urlRes.data.publicUrl;
             }
-            logger('imgbb 실패: ' + (d && d.error ? d.error.message : '알 수 없는 오류'));
-        } catch (e) {
-            logger('imgbb 오류: ' + e.message);
+        } catch(e) {
+            logger('이미지 업로드 예외: ' + e.message);
         }
-
-        return ''; // 둘 다 실패하면 빈 문자열
+        return '';
     }
 
-    // 제보 등록 버튼
-    elBtnUpload.onclick = async () => {
+    // 제보 등록
+    elBtnUpload.onclick = async function() {
         var content = elPostText.value.trim();
         var file    = elPostFile.files && elPostFile.files[0] ? elPostFile.files[0] : null;
-
-        // 내용과 사진 둘 다 없으면 차단
         if (!content && !file) return alert('내용을 입력하거나 사진을 선택해주세요.');
 
         elBtnUpload.style.pointerEvents = 'none';
@@ -447,27 +371,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (file) {
             elUploadStatus.textContent = '이미지 업로드 중...';
             imgUrl = await uploadImage(file);
-            // 이미지 업로드 실패해도 텍스트 게시물은 등록되도록 계속 진행
-            if (!imgUrl) {
-                logger('이미지 없이 텍스트만 등록합니다.');
-            }
         }
 
-        var insertResult = await sb.from('posts').insert({
-            content: content,
-            img    : imgUrl,
-            author : currentMyEmail
-        });
-
+        var r = await sb.from('posts').insert({ content: content, img: imgUrl, author: currentMyEmail });
         elBtnUpload.style.pointerEvents = 'auto';
 
-        if (insertResult.error) {
+        if (r.error) {
             elUploadStatus.textContent = '';
-            return alert('제보 등록 실패: ' + insertResult.error.message);
+            return alert('등록 실패: ' + r.error.message);
         }
-
-        elPostText.value          = '';
-        elPostFile.value          = '';
+        elPostText.value = ''; elPostFile.value = '';
         elFileDisplay.textContent = '선택된 파일 없음';
         elUploadStatus.textContent = '';
         logger('게시물 등록 완료');
@@ -478,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
         await sb.from('posts').delete().eq('id', id);
     };
 
-    // DM 상대 추가
+    // ── DM ──────────────────────────────────────────────────────
     elBtnAddContact.onclick = function() {
         var inputEmail = elChatAddInput.value.trim();
         if (!inputEmail) return alert('이메일을 입력하세요.');
@@ -486,6 +399,10 @@ document.addEventListener('DOMContentLoaded', function () {
         window.selectChatTarget(inputEmail);
         elChatAddInput.value = '';
     };
+
+    elChatAddInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') elBtnAddContact.click();
+    });
 
     window.selectChatTarget = function(email) {
         if (!email || email === '알 수 없음') return;
@@ -527,12 +444,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var initial  = c.email.charAt(0).toUpperCase();
             var name     = c.email.split('@')[0];
             var isActive = c.email === currentChatTo;
-            var badge    = c.unread > 0
-                ? '<div class="dm-badge">' + (c.unread > 9 ? '9+' : c.unread) + '</div>'
-                : '';
+            var badge    = c.unread > 0 ? '<div class="dm-badge">' + (c.unread > 9 ? '9+' : c.unread) + '</div>' : '';
             return '<div class="dm-contact ' + (isActive ? 'active' : '') + '" onclick="window.dmSelectContact(\'' + c.email + '\')">'
-                 + '<div class="dm-avatar">' + initial + badge + '</div>'
-                 + '<div class="dm-name">' + name + '</div></div>';
+                + '<div class="dm-avatar">' + initial + badge + '</div>'
+                + '<div class="dm-name">' + name + '</div></div>';
         }).join('');
     }
 
@@ -552,48 +467,51 @@ document.addEventListener('DOMContentLoaded', function () {
         elChatDisplay.innerHTML = filtered.map(function(c) {
             var isMe = c.sender === currentMyEmail;
             return '<div class="msg-wrapper ' + (isMe ? 'me' : 'you') + '">'
-                 + '<div class="msg ' + (isMe ? 'me' : 'you') + '">' + (c.msg || '') + '</div></div>';
+                + '<div class="msg ' + (isMe ? 'me' : 'you') + '">' + (c.msg || '') + '</div></div>';
         }).join('');
         elChatDisplay.scrollTop = elChatDisplay.scrollHeight;
     }
 
-    async function startRealtimeChats(myEmail) {
-        if (chatsChannel) return;
-        var result = await sb.from('chats').select('*')
+    function initChats(myEmail) {
+        sb.from('chats').select('*')
             .or('sender.eq.' + myEmail + ',receiver.eq.' + myEmail)
-            .order('created_at', { ascending: true });
-        allMessages = result.data || [];
-        allMessages.forEach(function(c) {
-            addContact(c.sender === myEmail ? c.receiver : c.sender);
-        });
-        renderFilteredChats();
+            .order('created_at', { ascending: true })
+            .then(function(r) {
+                allMessages = r.data || [];
+                allMessages.forEach(function(c) {
+                    addContact(c.sender === myEmail ? c.receiver : c.sender);
+                });
+                renderFilteredChats();
+            });
 
-        chatsChannel = sb.channel('realtime-chats')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(payload) {
-                var row = payload.new;
-                if (!row || (row.sender !== myEmail && row.receiver !== myEmail)) return;
-                if (!allMessages.some(function(m) { return m.id === row.id; })) {
+        // 채널명에 타임스탬프 추가 → 매번 새 채널 생성으로 중복 방지
+        chatsChannel = sb.channel('chats-ch-' + Date.now())
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' },
+                function(payload) {
+                    var row = payload.new;
+                    if (!row) return;
+                    if (row.sender !== myEmail && row.receiver !== myEmail) return;
+                    if (allMessages.some(function(m) { return m.id === row.id; })) return;
                     allMessages.push(row);
-                }
-                var other = row.sender === myEmail ? row.receiver : row.sender;
-                if (other !== currentChatTo) {
-                    addContact(other);
-                    var contact = contactList.find(function(c) { return c.email === other; });
-                    if (contact && row.receiver === myEmail) contact.unread += 1;
-                    renderContacts();
-                } else {
-                    renderFilteredChats();
-                }
-            })
+                    var other = row.sender === myEmail ? row.receiver : row.sender;
+                    if (other !== currentChatTo) {
+                        addContact(other);
+                        var contact = contactList.find(function(c) { return c.email === other; });
+                        if (contact && row.receiver === myEmail) contact.unread += 1;
+                        renderContacts();
+                    } else {
+                        renderFilteredChats();
+                    }
+                })
             .subscribe();
     }
 
-    elBtnChat.onclick = async () => {
+    elBtnChat.onclick = async function() {
         var msg = elChatMsg.value.trim();
         if (!currentChatTo) return alert('대화 상대를 먼저 선택하세요.');
         if (!msg) return;
-        var result = await sb.from('chats').insert({ sender: currentMyEmail, receiver: currentChatTo, msg: msg });
-        if (result.error) { logger('채팅 전송 실패: ' + result.error.message); return; }
+        var r = await sb.from('chats').insert({ sender: currentMyEmail, receiver: currentChatTo, msg: msg });
+        if (r.error) { logger('전송 실패: ' + r.error.message); return; }
         elChatMsg.value = '';
         elChatMsg.focus();
     };
@@ -604,6 +522,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-
 </body>
 </html>
