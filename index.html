@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Senedu 통합 시스템</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        :root { --main: #3498db; --bg: #f4f7f6; }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            margin: 0; padding: 16px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%; max-width: 480px;
+            background: white; padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 500px) {
+            body { padding: 0; }
+            .app-container { border-radius: 0; min-height: 100vh; box-shadow: none; }
+        }
+
+        .hidden { display: none !important; }
+
+        input, textarea {
+            width: 100%; padding: 13px; margin: 6px 0;
+            border: 1px solid #ddd; border-radius: 10px;
+            font-size: 16px;
+            -webkit-appearance: none; appearance: none; outline: none;
+        }
+        input:focus, textarea:focus { border-color: var(--main); }
+
+        .file-label {
+            display: block; width: 100%; padding: 12px; margin: 6px 0;
+            background: #f0f7ff; border: 1.5px dashed var(--main);
+            border-radius: 10px; color: var(--main);
+            font-size: 15px; font-weight: 500; text-align: center;
+            cursor: pointer;
+        }
+        .file-label:active { opacity: 0.7; }
+        #post-file { display: none; }
+        #file-name-display { font-size: 13px; color: #888; text-align: center; margin: 2px 0 4px; min-height: 18px; }
+        #upload-status    { font-size: 13px; color: var(--main); text-align: center; margin: 2px 0; min-height: 18px; }
+
+        .btn {
+            width: 100%; padding: 14px; border-radius: 10px;
+            font-weight: bold; font-size: 16px;
+            cursor: pointer; text-align: center;
+            transition: opacity 0.15s; margin-top: 8px;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-blue  { background: var(--main); color: white; }
+        .btn-green { background: #2ecc71; color: white; }
+        .btn:active { opacity: 0.7; }
+
+        #debug-console {
+            width: 100%; max-width: 480px;
+            background: #2c3e50; color: #2ecc71;
+            padding: 12px; border-radius: 10px; margin-top: 16px;
+            font-family: monospace; font-size: 12px;
+            overflow-y: auto; max-height: 120px; border: 2px solid #34495e;
+        }
+
+        .post-card {
+            border: 1px solid #eee; padding: 14px;
+            margin-top: 14px; border-radius: 12px;
+            position: relative;
+        }
+        .post-author {
+            color: var(--main); cursor: pointer;
+            text-decoration: underline; font-size: 15px;
+        }
+        .post-author:hover { opacity: 0.7; }
+        .post-card p { margin: 8px 0 0; font-size: 14px; color: #333; white-space: pre-wrap; word-break: break-all; }
+        .post-img {
+            display: block; width: 100%; max-height: 320px;
+            object-fit: cover; border-radius: 10px; margin-top: 10px;
+            background: #f0f0f0;
+        }
+
+        /* ── DM 섹션 ── */
+        .dm-section { margin-top: 0; }
+
+        /* 대화 상대 목록 */
+        .dm-contacts {
+            display: flex; gap: 12px;
+            overflow-x: auto; padding: 8px 0 12px;
+            scrollbar-width: none;
+        }
+        .dm-contacts::-webkit-scrollbar { display: none; }
+
+        .dm-contact {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; cursor: pointer; flex-shrink: 0;
+            min-width: 56px;
+        }
+        .dm-contact:active { opacity: 0.7; }
+
+        .dm-avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: #e3f2fd;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 600; color: var(--main);
+            border: 2px solid transparent;
+            transition: border-color 0.15s;
+            position: relative;
+        }
+        .dm-contact.active .dm-avatar {
+            border-color: var(--main);
+        }
+        
+        .dm-badge {
+            position: absolute; top: -2px; right: -2px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #e74c3c; color: white;
+            font-size: 10px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid white;
+        }
+
+        .dm-name {
+            font-size: 11px; color: #555;
+            max-width: 56px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+            text-align: center;
+        }
+        .dm-contact.active .dm-name { color: var(--main); font-weight: 600; }
+
+        .dm-empty {
+            font-size: 13px; color: #aaa;
+            padding: 8px 0 12px; text-align: center; width: 100%;
+        }
+
+        /* 채팅창 */
+        .chat-box {
+            height: 250px; overflow-y: auto;
+            border: 1px solid #eee; padding: 10px;
+            background: #f9f9f9; border-radius: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        
+        .msg-wrapper {
+            display: flex; align-items: flex-end; gap: 4px; 
+            margin-bottom: 2px;
+        }
+        .msg-wrapper.me { justify-content: flex-end; }
+        .msg-wrapper.you { justify-content: flex-start; }
+        
+        .msg {
+            max-width: 78%; padding: 9px 13px;
+            border-radius: 16px; font-size: 14px;
+            line-height: 1.4; word-break: break-all;
+        }
+        .msg.me  { background: #ffe812; border-bottom-right-radius: 4px; }
+        .msg.you { background: white; border: 1px solid #ddd; border-bottom-left-radius: 4px; }
+
+        /* 채팅 입력 */
+        .chat-input-row { display: flex; gap: 6px; margin-top: 8px; align-items: stretch; }
+        .chat-input-row input { margin: 0; }
+        #chat-msg { flex: 1; }
+        #btn-chat {
+            flex: 0 0 56px; padding: 0; margin: 0;
+            font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 현재 대화 중인 상대 표시 */
+        #chat-target-label {
+            font-size: 13px; color: #555;
+            padding: 6px 10px; background: #f0f7ff;
+            border-radius: 8px; margin-bottom: 8px;
+            text-align: center; min-height: 32px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div id="view-login">
+        <h2 style="text-align:center; color:var(--main); margin-bottom:20px;">Senedu 센터</h2>
+        <input type="email"    id="login-email" placeholder="학교 이메일 (@senedu.kr)"
+               autocomplete="email" inputmode="email">
+        <input type="password" id="login-pw"    placeholder="비밀번호 (6자 이상)"
+               autocomplete="current-password">
+        <div class="btn btn-blue" id="btn-login">입장하기</div>
+    </div>
+
+    <div id="view-main" class="hidden">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <strong id="my-id" style="font-size:15px;">접속 중...</strong>
+            <div class="btn" id="btn-logout"
+                 style="width:auto; padding:7px 14px; font-size:13px; background:#eee; margin:0;">
+                로그아웃
+            </div>
+        </div>
+
+        <div style="background:#e3f2fd; padding:14px; border-radius:12px;">
+            <textarea id="post-text" rows="2" placeholder="분실물 내용을 입력하세요" style="resize:none;"></textarea>
+            <label class="file-label" for="post-file">📷 사진 첨부 (갤러리 / 카메라)</label>
+            <input type="file" id="post-file" accept="image/*">
+            <div id="file-name-display">선택된 파일 없음</div>
+            <div id="upload-status"></div>
+            <div class="btn btn-blue" id="btn-upload">제보 등록</div>
+        </div>
+
+        <div id="post-list"></div>
+
+        <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+        <div class="dm-section">
+            <h3 style="margin:0 0 10px; font-size:16px; color:#333;">💬 실시간 DM 톡</h3>
+
+            <div style="display:flex; gap:6px; margin-bottom:10px;">
+                <input type="email" id="chat-add-input" placeholder="상대방 학교 이메일 입력" style="margin:0; flex:1; font-size: 14px; padding: 10px;">
+                <div class="btn btn-blue" id="btn-add-contact" style="margin:0; flex:0 0 60px; padding: 10px; font-size: 13px;">추가</div>
+            </div>
+
+            <div id="dm-contacts" class="dm-contacts"></div>
+
+            <div id="chat-target-label">대화 상대를 선택하세요</div>
+
+            <div id="chat-display" class="chat-box"></div>
+
+            <div class="chat-input-row">
+                <input type="text" id="chat-msg" placeholder="메시지를 입력하세요" autocomplete="off">
+                <div class="btn btn-green" id="btn-chat">전송</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="debug-console">시스템 로그 대기 중...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── 0. 설정값 ────────────────────────────────────────────────
+    const SUPABASE_URL   = "https://ppdzphbnqoueaqijofhq.supabase.co";
+    const SUPABASE_KEY   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwZHpwaGJucW91ZWFxaWpvZmhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQ0MDMsImV4cCI6MjA5NDYwMDQwM30.6rqkky3v-VRuSS1zC1_TskkXjPa7yUCTMp7EwP-j4ZM";
+    const ALLOWED_DOMAIN = "@senedu.kr";
+    const ADMINS         = ["bogheonu@gmail.com", "jjinseolee@gmail.com"];
+
+    // ── 1. Supabase 초기화 ───────────────────────────────────────
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ── 2. 로그 ─────────────────────────────────────────────────
+    const debugEl = document.getElementById('debug-console');
+    const logger  = (msg) => {
+        if (!debugEl) return;
+        debugEl.innerText += '\n> ' + msg;
+        debugEl.scrollTop  = debugEl.scrollHeight;
+        console.log(msg);
+    };
+
+    // ── 3. 요소 참조 ────────────────────────────────────────────
+    const elLoginView      = document.getElementById('view-login');
+    const elMainView       = document.getElementById('view-main');
+    const elMyId           = document.getElementById('my-id');
+    const elBtnLogin       = document.getElementById('btn-login');
+    const elBtnLogout      = document.getElementById('btn-logout');
+    const elBtnUpload      = document.getElementById('btn-upload');
+    const elBtnChat        = document.getElementById('btn-chat');
+    const elLoginEmail     = document.getElementById('login-email');
+    const elLoginPw        = document.getElementById('login-pw');
+    const elPostText       = document.getElementById('post-text');
+    const elPostFile       = document.getElementById('post-file');
+    const elFileDisplay    = document.getElementById('file-name-display');
+    const elUploadStatus   = document.getElementById('upload-status');
+    const elPostList       = document.getElementById('post-list');
+    const elChatDisplay    = document.getElementById('chat-display');
+    const elChatMsg        = document.getElementById('chat-msg');
+    const elDmContacts     = document.getElementById('dm-contacts');
+    const elChatTargetLabel= document.getElementById('chat-target-label');
+    const elChatAddInput   = document.getElementById('chat-add-input');
+    const elBtnAddContact  = document.getElementById('btn-add-contact');
+
+    // 전역 상태
+    let currentMyEmail  = "";
+    let currentChatTo   = "";       
+    let contactList     = [];       
+    let allMessages     = [];       
+    let postsChannel    = null;
+    let chatsChannel    = null;
+
+    // ── 4. 파일 선택 리스너 (정상 복구 완료) ───────────────────────────
+    elPostFile.addEventListener('change', function () {
+        const file = this.files && this.files[0];
+        elFileDisplay.textContent = file ? file.name : '선택된 파일 없음';
+    });
+
+    // ── 5. 화면 전환 ────────────────────────────────────────────
+    function showMain(email) {
+        elLoginView.classList.add('hidden');
+        elMainView.classList.remove('hidden');
+        elMyId.innerText = email.split('@')[0] + ' 님';
+    }
+    function showLogin() {
+        elMainView.classList.add('hidden');
+        elLoginView.classList.remove('hidden');
+    }
+
+    // ── 6. 로그인/로그아웃 ─────────────────────────────────────
+    elBtnLogin.onclick = async () => {
+        const email = elLoginEmail.value.trim();
+        const pw    = elLoginPw.value;
+
+        if (!email.includes(ALLOWED_DOMAIN) && !ADMINS.includes(email)) {
+            return alert('학교 이메일(' + ALLOWED_DOMAIN + ') 또는 관리자 계정을 사용하세요.');
+        }
+        if (pw.length < 6) return alert('비밀번호는 6자 이상입니다.');
+
+        logger('로그인 시도 중...');
+        const { error: signInErr } = await sb.auth.signInWithPassword({ email, password: pw });
+
+        if (signInErr) {
+            if (signInErr.message.includes('Invalid login') || signInErr.message.includes('User not found')) {
+                const { error: signUpErr } = await sb.auth.signUp({ email, password: pw });
+                if (signUpErr) return alert('가입 오류: ' + signUpErr.message);
+                
+                const { error: retryErr } = await sb.auth.signInWithPassword({ email, password: pw });
+                if (retryErr) return alert('가입 완료. 다시 [입장하기]를 눌러주세요.');
+            } else {
+                return alert('로그인 오류: ' + signInErr.message);
+            }
+        }
+    };
+
+    elBtnLogout.onclick = async () => {
+        try { await sb.auth.signOut(); } catch (e) {}
+        try { Object.keys(localStorage).forEach(k => { if (k.startsWith('sb-')) localStorage.removeItem(k); }); } catch (e) {}
+        currentMyEmail = ""; currentChatTo = ""; contactList = []; allMessages = [];
+        showLogin();
+    };
+
+    // ── 8. 인증 상태 감시 ───────────────────────────────────────
+    sb.auth.onAuthStateChange((event, session) => {
+        if (session && session.user) {
+            currentMyEmail = session.user.email;
+            const isAdmin  = ADMINS.includes(currentMyEmail);
+            showMain(currentMyEmail);
+            startRealtimePosts(isAdmin);
+            startRealtimeChats(currentMyEmail);
+        } else {
+            currentMyEmail = "";
+            showLogin();
+            if (postsChannel) { sb.removeChannel(postsChannel); postsChannel = null; }
+            if (chatsChannel) { sb.removeChannel(chatsChannel); chatsChannel = null; }
+        }
+    });
+
+    // ── 9. 게시판 관리 ──────────────────────────────────────────
+    async function fetchAndRenderPosts(isAdmin) {
+        const { data } = await sb.from('posts').select('*').order('created_at', { ascending: false });
+        renderPosts(data || [], isAdmin);
+    }
+    async function startRealtimePosts(isAdmin) {
+        if (postsChannel) return;
+        await fetchAndRenderPosts(isAdmin);
+        postsChannel = sb.channel('realtime-posts')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => fetchAndRenderPosts(isAdmin))
+            .subscribe();
+    }
+    function renderPosts(data, isAdmin) {
+        if (!data || data.length === 0) {
+            elPostList.innerHTML = '<p style="color:#aaa;text-align:center;margin-top:20px;">등록된 게시물이 없습니다.</p>';
+            return;
+        }
+        elPostList.innerHTML = data.map(p => {
+            const rawAuthor  = p.author || '알 수 없음';
+            const authorName = rawAuthor.split('@')[0];
+            const time       = p.created_at ? new Date(p.created_at).toLocaleString('ko-KR') : '';
+            const imgHtml    = p.img ? `<img src="${p.img}" class="post-img" loading="lazy">` : '';
+            const isMyPost   = rawAuthor === currentMyEmail;
+            const deleteBtn  = (isAdmin || isMyPost) 
+                ? `<button onclick="window.deletePost('${p.id}')" style="color:red;background:none;border:none;cursor:pointer;position:absolute;top:14px;right:14px;font-size:13px;">[삭제]</button>` : '';
+            
+            return `<div class="post-card">
+                    <b class="post-author" onclick="window.selectChatTarget('${rawAuthor}')" title="클릭하여 DM 보내기">${authorName}</b>
+                    <span style="font-size:12px;color:#aaa;margin-left:8px;">${time}</span>
+                    <p>${p.content || ''}</p>${imgHtml}${deleteBtn}</div>`;
+        }).join('');
+    }
+
+    // ── [수정 및 복구] 이미지 업로드 연동 제보 등록 이벤트 핸들러 ──
+    elBtnUpload.onclick = async () => {
+        const content = elPostText.value.trim();
+        // 글 내용이나 사진 중 하나는 무조건 있어야 등록되도록 분기 처리
+        if (!content && !elPostFile.files[0]) return alert('내용을 입력하거나 사진을 선택해주세요.');
+        
+        elBtnUpload.style.pointerEvents = 'none';
+        elUploadStatus.textContent = '사진 및 내용 업로드 중...';
+        
+        let imgUrl = '';
+        if (elPostFile.files[0]) {
+            imgUrl = await uploadImage(elPostFile.files[0]);
+            if (!imgUrl) {
+                alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+                elBtnUpload.style.pointerEvents = 'auto';
+                elUploadStatus.textContent = '';
+                return;
+            }
+        }
+
+        const { error } = await sb.from('posts').insert({ content, img: imgUrl, author: currentMyEmail });
+        
+        if(error) {
+            alert('제보 등록에 실패했습니다: ' + error.message);
+        }
+        
+        elBtnUpload.style.pointerEvents = 'auto';
+        elPostText.value = ''; 
+        elPostFile.value = '';
+        elFileDisplay.textContent = '선택된 파일 없음'; 
+        elUploadStatus.textContent = '';
+    };
+
+    // ImgBB API를 경유하는 완전한 파일 비동기 인코딩 업로드 기능
+    async function uploadImage(file) {
+        try {
+            const fd = new FormData();
+            const base64 = await new Promise((res, rej) => { 
+                const r = new FileReader(); 
+                r.onload = () => res(r.result); 
+                r.onerror = rej; 
+                r.readAsDataURL(file); 
+            });
+            fd.append('image', base64.split(',')[1]);
+            const res = await fetch('https://api.imgbb.com/1/upload?key=692797686561f516a5196696e382898c', { method: 'POST', body: fd });
+            const d = await res.json();
+            if (d && d.success) return d.data.url;
+        } catch (e) {
+            console.error(e);
+        }
+        return '';
+    }
+
+    window.deletePost = async (id) => {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        await sb.from('posts').delete().eq('id', id);
+    };
+
+    // ── 10. DM 연락처 수동 추가 로직 ──────────────────────────────
+    elBtnAddContact.onclick = () => {
+        const inputEmail = elChatAddInput.value.trim();
+        if (!inputEmail) return alert('이메일을 입력하세요.');
+        if (!inputEmail.includes('@')) return alert('정확한 이메일 형식을 입력하세요.');
+        window.selectChatTarget(inputEmail);
+        elChatAddInput.value = '';
+    };
+
+    window.selectChatTarget = function(email) {
+        if (!email || email === '알 수 없음') return;
+        if (email === currentMyEmail) return alert('본인에게는 DM을 보낼 수 없습니다.'); 
+        
+        addContact(email);
+        selectContact(email);
+        document.querySelector('.dm-section').scrollIntoView({ behavior: 'smooth' });
+        elChatMsg.focus();
+    };
+
+    function addContact(email) {
+        if (!email || email === currentMyEmail) return;
+        if (!contactList.find(c => c.email === email)) {
+            contactList.push({ email: email, unread: 0 });
+            renderContacts();
+        }
+    }
+
+    // ── 11. 대화방 선택 및 전환 ──────────────────────────────
+    function selectContact(email) {
+        currentChatTo = email;
+        const contact = contactList.find(c => c.email === email);
+        if (contact) contact.unread = 0; 
+        
+        elChatTargetLabel.textContent = '💬 ' + email.split('@')[0] + ' 님과 대화 중';
+        renderContacts();
+        renderFilteredChats();
+    }
+
+    window.dmSelectContact = function(email) {
+        selectContact(email);
+        elChatMsg.focus();
+    };
+
+    function renderContacts() {
+        if (contactList.length === 0) {
+            elDmContacts.innerHTML = '<div class="dm-empty">상대방 이메일을 입력하거나 게시물 작성자를 클릭해 DM을 시작하세요.</div>';
+            return;
+        }
+        elDmContacts.innerHTML = contactList.map(c => {
+            const initial  = c.email.charAt(0).toUpperCase();
+            const name     = c.email.split('@')[0];
+            const isActive = c.email === currentChatTo;
+            const badge    = c.unread > 0 ? `<div class="dm-badge">${c.unread > 9 ? '9+' : c.unread}</div>` : '';
+            
+            return `<div class="dm-contact ${isActive ? 'active' : ''}" onclick="window.dmSelectContact('${c.email}')">
+                    <div class="dm-avatar">${initial}${badge}</div>
+                    <div class="dm-name">${name}</div></div>`;
+        }).join('');
+    }
+
+    function renderFilteredChats() {
+        if (!currentChatTo) {
+            elChatDisplay.innerHTML = '<p style="color:#aaa;text-align:center;font-size:13px;margin-top:20px;">대화 상대를 선택하세요</p>';
+            return;
+        }
+        const filtered = allMessages.filter(c => 
+            (c.sender === currentMyEmail && c.receiver === currentChatTo) ||
+            (c.sender === currentChatTo  && c.receiver === currentMyEmail)
+        );
+        if (filtered.length === 0) {
+            elChatDisplay.innerHTML = '<p style="color:#aaa;text-align:center;font-size:13px;margin-top:20px;">첫 메시지를 보내보세요!</p>';
+            return;
+        }
+        
+        elChatDisplay.innerHTML = filtered.map(c => {
+            const isMe = c.sender === currentMyEmail;
+            
+            if(isMe) {
+                return `<div class="msg-wrapper me"><div class="msg me">${c.msg || ''}</div></div>`;
+            } else {
+                return `<div class="msg-wrapper you"><div class="msg you">${c.msg || ''}</div></div>`;
+            }
+        }).join('');
+        elChatDisplay.scrollTop = elChatDisplay.scrollHeight;
+    }
+
+    // ── 12. 실시간 채팅 로드 및 수신 ────────────────────
+    async function startRealtimeChats(myEmail) {
+        if (chatsChannel) return;
+
+        const { data } = await sb.from('chats').select('*')
+            .or(`sender.eq.${myEmail},receiver.eq.${myEmail}`)
+            .order('created_at', { ascending: true });
+
+        allMessages = data || [];
+        allMessages.forEach(c => addContact(c.sender === myEmail ? c.receiver : c.sender));
+        renderFilteredChats();
+
+        chatsChannel = sb.channel('realtime-chats')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(payload) {
+                const row = payload.new;
+                if (!row || (row.sender !== myEmail && row.receiver !== myEmail)) return;
+
+                if (!allMessages.some(m => m.id === row.id)) {
+                    allMessages.push(row);
+                }
+                const other = row.sender === myEmail ? row.receiver : row.sender;
+                
+                if (other !== currentChatTo) {
+                    addContact(other);
+                    const contact = contactList.find(c => c.email === other);
+                    if (contact && row.receiver === myEmail) contact.unread += 1; 
+                    renderContacts();
+                } else {
+                    renderFilteredChats();
+                }
+            })
+            .subscribe();
+    }
+
+    // ── 13. 메시지 전송 ──────────────────────────────────────────
+    elBtnChat.onclick = async () => {
+        const msg = elChatMsg.value.trim();
+        if (!currentChatTo) return alert('대화 상대를 먼저 선택하세요.');
+        if (!msg) return;
+
+        const { error } = await sb.from('chats').insert({
+            sender: currentMyEmail, receiver: currentChatTo, msg: msg
+        });
+
+        if (error) logger('채팅 전송 실패: ' + error.message);
+        elChatMsg.value = '';
+        elChatMsg.focus();
+    };
+
+    elChatMsg.addEventListener('keyup', e => { if (e.key === 'Enter') elBtnChat.click(); });
+
+});
+</script>
+
+</body>
+</html>
