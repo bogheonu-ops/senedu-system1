@@ -90,7 +90,6 @@
         /* ── DM 섹션 ── */
         .dm-section { margin-top: 0; }
 
-        /* 대화 상대 목록 */
         .dm-contacts {
             display: flex; gap: 12px;
             overflow-x: auto; padding: 8px 0 12px;
@@ -114,10 +113,8 @@
             transition: border-color 0.15s;
             position: relative;
         }
-        .dm-contact.active .dm-avatar {
-            border-color: var(--main);
-        }
-        
+        .dm-contact.active .dm-avatar { border-color: var(--main); }
+
         .dm-badge {
             position: absolute; top: -2px; right: -2px;
             width: 16px; height: 16px; border-radius: 50%;
@@ -140,21 +137,20 @@
             padding: 8px 0 12px; text-align: center; width: 100%;
         }
 
-        /* 채팅창 */
         .chat-box {
             height: 250px; overflow-y: auto;
             border: 1px solid #eee; padding: 10px;
             background: #f9f9f9; border-radius: 10px;
             display: flex; flex-direction: column; gap: 8px;
         }
-        
+
         .msg-wrapper {
-            display: flex; align-items: flex-end; gap: 4px; 
+            display: flex; align-items: flex-end; gap: 4px;
             margin-bottom: 2px;
         }
-        .msg-wrapper.me { justify-content: flex-end; }
+        .msg-wrapper.me  { justify-content: flex-end; }
         .msg-wrapper.you { justify-content: flex-start; }
-        
+
         .msg {
             max-width: 78%; padding: 9px 13px;
             border-radius: 16px; font-size: 14px;
@@ -163,7 +159,6 @@
         .msg.me  { background: #ffe812; border-bottom-right-radius: 4px; }
         .msg.you { background: white; border: 1px solid #ddd; border-bottom-left-radius: 4px; }
 
-        /* 채팅 입력 */
         .chat-input-row { display: flex; gap: 6px; margin-top: 8px; align-items: stretch; }
         .chat-input-row input { margin: 0; }
         #chat-msg { flex: 1; }
@@ -173,7 +168,6 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* 현재 대화 중인 상대 표시 */
         #chat-target-label {
             font-size: 13px; color: #555;
             padding: 6px 10px; background: #f0f7ff;
@@ -248,17 +242,14 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── 0. 설정값 ────────────────────────────────────────────────
     const SUPABASE_URL   = "https://ppdzphbnqoueaqijofhq.supabase.co";
     const SUPABASE_KEY   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwZHpwaGJucW91ZWFxaWpvZmhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQ0MDMsImV4cCI6MjA5NDYwMDQwM30.6rqkky3v-VRuSS1zC1_TskkXjPa7yUCTMp7EwP-j4ZM";
     const ALLOWED_DOMAIN = "@senedu.kr";
     const ADMINS         = ["bogheonu@gmail.com", "jjinseolee@gmail.com"];
 
-    // ── 1. Supabase 초기화 ───────────────────────────────────────
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ── 2. 로그 ─────────────────────────────────────────────────
     const debugEl = document.getElementById('debug-console');
     const logger  = (msg) => {
         if (!debugEl) return;
@@ -267,7 +258,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(msg);
     };
 
-    // ── 3. 요소 참조 ────────────────────────────────────────────
     const elLoginView      = document.getElementById('view-login');
     const elMainView       = document.getElementById('view-main');
     const elMyId           = document.getElementById('my-id');
@@ -289,21 +279,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const elChatAddInput   = document.getElementById('chat-add-input');
     const elBtnAddContact  = document.getElementById('btn-add-contact');
 
-    // 전역 상태
     let currentMyEmail  = "";
-    let currentChatTo   = "";       
-    let contactList     = [];       
-    let allMessages     = [];       
+    let currentChatTo   = "";
+    let contactList     = [];
+    let allMessages     = [];
     let postsChannel    = null;
     let chatsChannel    = null;
 
-    // ── 4. 파일 선택 리스너 (정상 복구 완료) ───────────────────────────
     elPostFile.addEventListener('change', function () {
         const file = this.files && this.files[0];
         elFileDisplay.textContent = file ? file.name : '선택된 파일 없음';
     });
 
-    // ── 5. 화면 전환 ────────────────────────────────────────────
     function showMain(email) {
         elLoginView.classList.add('hidden');
         elMainView.classList.remove('hidden');
@@ -314,24 +301,19 @@ document.addEventListener('DOMContentLoaded', function () {
         elLoginView.classList.remove('hidden');
     }
 
-    // ── 6. 로그인/로그아웃 ─────────────────────────────────────
     elBtnLogin.onclick = async () => {
         const email = elLoginEmail.value.trim();
         const pw    = elLoginPw.value;
-
         if (!email.includes(ALLOWED_DOMAIN) && !ADMINS.includes(email)) {
             return alert('학교 이메일(' + ALLOWED_DOMAIN + ') 또는 관리자 계정을 사용하세요.');
         }
         if (pw.length < 6) return alert('비밀번호는 6자 이상입니다.');
-
         logger('로그인 시도 중...');
         const { error: signInErr } = await sb.auth.signInWithPassword({ email, password: pw });
-
         if (signInErr) {
             if (signInErr.message.includes('Invalid login') || signInErr.message.includes('User not found')) {
                 const { error: signUpErr } = await sb.auth.signUp({ email, password: pw });
                 if (signUpErr) return alert('가입 오류: ' + signUpErr.message);
-                
                 const { error: retryErr } = await sb.auth.signInWithPassword({ email, password: pw });
                 if (retryErr) return alert('가입 완료. 다시 [입장하기]를 눌러주세요.');
             } else {
@@ -347,13 +329,11 @@ document.addEventListener('DOMContentLoaded', function () {
         showLogin();
     };
 
-    // ── 8. 인증 상태 감시 ───────────────────────────────────────
     sb.auth.onAuthStateChange((event, session) => {
         if (session && session.user) {
             currentMyEmail = session.user.email;
-            const isAdmin  = ADMINS.includes(currentMyEmail);
             showMain(currentMyEmail);
-            startRealtimePosts(isAdmin);
+            startRealtimePosts(ADMINS.includes(currentMyEmail));
             startRealtimeChats(currentMyEmail);
         } else {
             currentMyEmail = "";
@@ -363,7 +343,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // ── 9. 게시판 관리 ──────────────────────────────────────────
     async function fetchAndRenderPosts(isAdmin) {
         const { data } = await sb.from('posts').select('*').order('created_at', { ascending: false });
         renderPosts(data || [], isAdmin);
@@ -384,79 +363,124 @@ document.addEventListener('DOMContentLoaded', function () {
             const rawAuthor  = p.author || '알 수 없음';
             const authorName = rawAuthor.split('@')[0];
             const time       = p.created_at ? new Date(p.created_at).toLocaleString('ko-KR') : '';
-            const imgHtml    = p.img ? `<img src="${p.img}" class="post-img" loading="lazy">` : '';
+            const imgHtml    = p.img ? '<img src="' + p.img + '" class="post-img" loading="lazy">' : '';
             const isMyPost   = rawAuthor === currentMyEmail;
-            const deleteBtn  = (isAdmin || isMyPost) 
-                ? `<button onclick="window.deletePost('${p.id}')" style="color:red;background:none;border:none;cursor:pointer;position:absolute;top:14px;right:14px;font-size:13px;">[삭제]</button>` : '';
-            
-            return `<div class="post-card">
-                    <b class="post-author" onclick="window.selectChatTarget('${rawAuthor}')" title="클릭하여 DM 보내기">${authorName}</b>
-                    <span style="font-size:12px;color:#aaa;margin-left:8px;">${time}</span>
-                    <p>${p.content || ''}</p>${imgHtml}${deleteBtn}</div>`;
+            const deleteBtn  = (isAdmin || isMyPost)
+                ? '<button onclick="window.deletePost(\'' + p.id + '\')" style="color:red;background:none;border:none;cursor:pointer;position:absolute;top:14px;right:14px;font-size:13px;">[삭제]</button>'
+                : '';
+            return '<div class="post-card">'
+                 + '<b class="post-author" onclick="window.selectChatTarget(\'' + rawAuthor + '\')" title="클릭하여 DM 보내기">' + authorName + '</b>'
+                 + '<span style="font-size:12px;color:#aaa;margin-left:8px;">' + time + '</span>'
+                 + '<p>' + (p.content || '') + '</p>' + imgHtml + deleteBtn + '</div>';
         }).join('');
     }
 
-    // ── [수정 및 복구] 이미지 업로드 연동 제보 등록 이벤트 핸들러 ──
+    // ── 사진 업로드 핵심 함수 ────────────────────────────────────
+    // 파일을 base64로 변환하는 헬퍼
+    function fileToBase64(file) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload  = function() { resolve(reader.result); };
+            reader.onerror = function() { reject(new Error('파일 읽기 실패')); };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 이미지 업로드: Supabase Storage → imgbb 순으로 시도
+    async function uploadImage(file) {
+        // 방법 1: Supabase Storage (가장 안정적)
+        try {
+            var fileName = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            var uploadResult = await sb.storage
+                .from('post-images')
+                .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+            if (!uploadResult.error) {
+                var urlResult = sb.storage.from('post-images').getPublicUrl(fileName);
+                if (urlResult.data && urlResult.data.publicUrl) {
+                    logger('이미지 업로드 성공 (Supabase Storage)');
+                    return urlResult.data.publicUrl;
+                }
+            }
+            logger('Supabase Storage 실패 → imgbb 시도');
+        } catch (e) {
+            logger('Supabase Storage 오류 → imgbb 시도');
+        }
+
+        // 방법 2: imgbb (base64 방식)
+        try {
+            var base64 = await fileToBase64(file);
+            var base64Data = base64.split(',')[1]; // "data:image/...;base64," 제거
+
+            var fd = new FormData();
+            fd.append('image', base64Data);
+
+            var res = await fetch(
+                'https://api.imgbb.com/1/upload?key=692797686561f516a5196696e382898c',
+                { method: 'POST', body: fd }
+            );
+            var d = await res.json();
+            if (d && d.success) {
+                logger('이미지 업로드 성공 (imgbb)');
+                return d.data.url;
+            }
+            logger('imgbb 실패: ' + (d && d.error ? d.error.message : '알 수 없는 오류'));
+        } catch (e) {
+            logger('imgbb 오류: ' + e.message);
+        }
+
+        return ''; // 둘 다 실패하면 빈 문자열
+    }
+
+    // 제보 등록 버튼
     elBtnUpload.onclick = async () => {
-        const content = elPostText.value.trim();
-        // 글 내용이나 사진 중 하나는 무조건 있어야 등록되도록 분기 처리
-        if (!content && !elPostFile.files[0]) return alert('내용을 입력하거나 사진을 선택해주세요.');
-        
+        var content = elPostText.value.trim();
+        var file    = elPostFile.files && elPostFile.files[0] ? elPostFile.files[0] : null;
+
+        // 내용과 사진 둘 다 없으면 차단
+        if (!content && !file) return alert('내용을 입력하거나 사진을 선택해주세요.');
+
         elBtnUpload.style.pointerEvents = 'none';
-        elUploadStatus.textContent = '사진 및 내용 업로드 중...';
-        
-        let imgUrl = '';
-        if (elPostFile.files[0]) {
-            imgUrl = await uploadImage(elPostFile.files[0]);
+        elUploadStatus.textContent = '등록 중...';
+
+        var imgUrl = '';
+        if (file) {
+            elUploadStatus.textContent = '이미지 업로드 중...';
+            imgUrl = await uploadImage(file);
+            // 이미지 업로드 실패해도 텍스트 게시물은 등록되도록 계속 진행
             if (!imgUrl) {
-                alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
-                elBtnUpload.style.pointerEvents = 'auto';
-                elUploadStatus.textContent = '';
-                return;
+                logger('이미지 없이 텍스트만 등록합니다.');
             }
         }
 
-        const { error } = await sb.from('posts').insert({ content, img: imgUrl, author: currentMyEmail });
-        
-        if(error) {
-            alert('제보 등록에 실패했습니다: ' + error.message);
-        }
-        
+        var insertResult = await sb.from('posts').insert({
+            content: content,
+            img    : imgUrl,
+            author : currentMyEmail
+        });
+
         elBtnUpload.style.pointerEvents = 'auto';
-        elPostText.value = ''; 
-        elPostFile.value = '';
-        elFileDisplay.textContent = '선택된 파일 없음'; 
+
+        if (insertResult.error) {
+            elUploadStatus.textContent = '';
+            return alert('제보 등록 실패: ' + insertResult.error.message);
+        }
+
+        elPostText.value          = '';
+        elPostFile.value          = '';
+        elFileDisplay.textContent = '선택된 파일 없음';
         elUploadStatus.textContent = '';
+        logger('게시물 등록 완료');
     };
 
-    // ImgBB API를 경유하는 완전한 파일 비동기 인코딩 업로드 기능
-    async function uploadImage(file) {
-        try {
-            const fd = new FormData();
-            const base64 = await new Promise((res, rej) => { 
-                const r = new FileReader(); 
-                r.onload = () => res(r.result); 
-                r.onerror = rej; 
-                r.readAsDataURL(file); 
-            });
-            fd.append('image', base64.split(',')[1]);
-            const res = await fetch('https://api.imgbb.com/1/upload?key=692797686561f516a5196696e382898c', { method: 'POST', body: fd });
-            const d = await res.json();
-            if (d && d.success) return d.data.url;
-        } catch (e) {
-            console.error(e);
-        }
-        return '';
-    }
-
-    window.deletePost = async (id) => {
+    window.deletePost = async function(id) {
         if (!confirm('정말 삭제하시겠습니까?')) return;
         await sb.from('posts').delete().eq('id', id);
     };
 
-    // ── 10. DM 연락처 수동 추가 로직 ──────────────────────────────
-    elBtnAddContact.onclick = () => {
-        const inputEmail = elChatAddInput.value.trim();
+    // DM 상대 추가
+    elBtnAddContact.onclick = function() {
+        var inputEmail = elChatAddInput.value.trim();
         if (!inputEmail) return alert('이메일을 입력하세요.');
         if (!inputEmail.includes('@')) return alert('정확한 이메일 형식을 입력하세요.');
         window.selectChatTarget(inputEmail);
@@ -465,8 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.selectChatTarget = function(email) {
         if (!email || email === '알 수 없음') return;
-        if (email === currentMyEmail) return alert('본인에게는 DM을 보낼 수 없습니다.'); 
-        
+        if (email === currentMyEmail) return alert('본인에게는 DM을 보낼 수 없습니다.');
         addContact(email);
         selectContact(email);
         document.querySelector('.dm-section').scrollIntoView({ behavior: 'smooth' });
@@ -475,18 +498,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function addContact(email) {
         if (!email || email === currentMyEmail) return;
-        if (!contactList.find(c => c.email === email)) {
+        if (!contactList.find(function(c) { return c.email === email; })) {
             contactList.push({ email: email, unread: 0 });
             renderContacts();
         }
     }
 
-    // ── 11. 대화방 선택 및 전환 ──────────────────────────────
     function selectContact(email) {
         currentChatTo = email;
-        const contact = contactList.find(c => c.email === email);
-        if (contact) contact.unread = 0; 
-        
+        var contact = contactList.find(function(c) { return c.email === email; });
+        if (contact) contact.unread = 0;
         elChatTargetLabel.textContent = '💬 ' + email.split('@')[0] + ' 님과 대화 중';
         renderContacts();
         renderFilteredChats();
@@ -502,15 +523,16 @@ document.addEventListener('DOMContentLoaded', function () {
             elDmContacts.innerHTML = '<div class="dm-empty">상대방 이메일을 입력하거나 게시물 작성자를 클릭해 DM을 시작하세요.</div>';
             return;
         }
-        elDmContacts.innerHTML = contactList.map(c => {
-            const initial  = c.email.charAt(0).toUpperCase();
-            const name     = c.email.split('@')[0];
-            const isActive = c.email === currentChatTo;
-            const badge    = c.unread > 0 ? `<div class="dm-badge">${c.unread > 9 ? '9+' : c.unread}</div>` : '';
-            
-            return `<div class="dm-contact ${isActive ? 'active' : ''}" onclick="window.dmSelectContact('${c.email}')">
-                    <div class="dm-avatar">${initial}${badge}</div>
-                    <div class="dm-name">${name}</div></div>`;
+        elDmContacts.innerHTML = contactList.map(function(c) {
+            var initial  = c.email.charAt(0).toUpperCase();
+            var name     = c.email.split('@')[0];
+            var isActive = c.email === currentChatTo;
+            var badge    = c.unread > 0
+                ? '<div class="dm-badge">' + (c.unread > 9 ? '9+' : c.unread) + '</div>'
+                : '';
+            return '<div class="dm-contact ' + (isActive ? 'active' : '') + '" onclick="window.dmSelectContact(\'' + c.email + '\')">'
+                 + '<div class="dm-avatar">' + initial + badge + '</div>'
+                 + '<div class="dm-name">' + name + '</div></div>';
         }).join('');
     }
 
@@ -519,53 +541,45 @@ document.addEventListener('DOMContentLoaded', function () {
             elChatDisplay.innerHTML = '<p style="color:#aaa;text-align:center;font-size:13px;margin-top:20px;">대화 상대를 선택하세요</p>';
             return;
         }
-        const filtered = allMessages.filter(c => 
-            (c.sender === currentMyEmail && c.receiver === currentChatTo) ||
-            (c.sender === currentChatTo  && c.receiver === currentMyEmail)
-        );
+        var filtered = allMessages.filter(function(c) {
+            return (c.sender === currentMyEmail && c.receiver === currentChatTo) ||
+                   (c.sender === currentChatTo  && c.receiver === currentMyEmail);
+        });
         if (filtered.length === 0) {
             elChatDisplay.innerHTML = '<p style="color:#aaa;text-align:center;font-size:13px;margin-top:20px;">첫 메시지를 보내보세요!</p>';
             return;
         }
-        
-        elChatDisplay.innerHTML = filtered.map(c => {
-            const isMe = c.sender === currentMyEmail;
-            
-            if(isMe) {
-                return `<div class="msg-wrapper me"><div class="msg me">${c.msg || ''}</div></div>`;
-            } else {
-                return `<div class="msg-wrapper you"><div class="msg you">${c.msg || ''}</div></div>`;
-            }
+        elChatDisplay.innerHTML = filtered.map(function(c) {
+            var isMe = c.sender === currentMyEmail;
+            return '<div class="msg-wrapper ' + (isMe ? 'me' : 'you') + '">'
+                 + '<div class="msg ' + (isMe ? 'me' : 'you') + '">' + (c.msg || '') + '</div></div>';
         }).join('');
         elChatDisplay.scrollTop = elChatDisplay.scrollHeight;
     }
 
-    // ── 12. 실시간 채팅 로드 및 수신 ────────────────────
     async function startRealtimeChats(myEmail) {
         if (chatsChannel) return;
-
-        const { data } = await sb.from('chats').select('*')
-            .or(`sender.eq.${myEmail},receiver.eq.${myEmail}`)
+        var result = await sb.from('chats').select('*')
+            .or('sender.eq.' + myEmail + ',receiver.eq.' + myEmail)
             .order('created_at', { ascending: true });
-
-        allMessages = data || [];
-        allMessages.forEach(c => addContact(c.sender === myEmail ? c.receiver : c.sender));
+        allMessages = result.data || [];
+        allMessages.forEach(function(c) {
+            addContact(c.sender === myEmail ? c.receiver : c.sender);
+        });
         renderFilteredChats();
 
         chatsChannel = sb.channel('realtime-chats')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(payload) {
-                const row = payload.new;
+                var row = payload.new;
                 if (!row || (row.sender !== myEmail && row.receiver !== myEmail)) return;
-
-                if (!allMessages.some(m => m.id === row.id)) {
+                if (!allMessages.some(function(m) { return m.id === row.id; })) {
                     allMessages.push(row);
                 }
-                const other = row.sender === myEmail ? row.receiver : row.sender;
-                
+                var other = row.sender === myEmail ? row.receiver : row.sender;
                 if (other !== currentChatTo) {
                     addContact(other);
-                    const contact = contactList.find(c => c.email === other);
-                    if (contact && row.receiver === myEmail) contact.unread += 1; 
+                    var contact = contactList.find(function(c) { return c.email === other; });
+                    if (contact && row.receiver === myEmail) contact.unread += 1;
                     renderContacts();
                 } else {
                     renderFilteredChats();
@@ -574,22 +588,19 @@ document.addEventListener('DOMContentLoaded', function () {
             .subscribe();
     }
 
-    // ── 13. 메시지 전송 ──────────────────────────────────────────
     elBtnChat.onclick = async () => {
-        const msg = elChatMsg.value.trim();
+        var msg = elChatMsg.value.trim();
         if (!currentChatTo) return alert('대화 상대를 먼저 선택하세요.');
         if (!msg) return;
-
-        const { error } = await sb.from('chats').insert({
-            sender: currentMyEmail, receiver: currentChatTo, msg: msg
-        });
-
-        if (error) logger('채팅 전송 실패: ' + error.message);
+        var result = await sb.from('chats').insert({ sender: currentMyEmail, receiver: currentChatTo, msg: msg });
+        if (result.error) { logger('채팅 전송 실패: ' + result.error.message); return; }
         elChatMsg.value = '';
         elChatMsg.focus();
     };
 
-    elChatMsg.addEventListener('keyup', e => { if (e.key === 'Enter') elBtnChat.click(); });
+    elChatMsg.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') elBtnChat.click();
+    });
 
 });
 </script>
